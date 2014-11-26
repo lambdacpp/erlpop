@@ -1,0 +1,9 @@
+{application, erlpop,
+    [{description, "Simple PoP Library for Erlang"},
+     {vsn, "0.0.1"},
+     {modules, [epop_client,
+                epop_client_utils,
+                epop_md5,
+                epop_message
+               ]},
+     {applications, [kernel, stdlib]}]}.
