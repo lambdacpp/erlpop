@@ -21,24 +21,27 @@
 -export([parse/1, find_header/2]).
 
 parse(Message) ->
-    {_, Boundary, _} = regexp:first_match(Message, "\r\n\r\n"),
+    {_, [{Boundary, _}]} = re:run(Message, "\r\n\r\n"),
     Header = string:substr(Message, 1, Boundary - 1),
     Body = string:substr(Message, Boundary + 4),
     Headers = parse_headers(Header),
     {message, Headers, Body}.
 
+split(String,R) ->
+    lists:map(fun(X)-> binary_to_list(X) end, re:split(String, R)).
+
 parse_headers(Header) ->    
     %% do "unfolding" first
     %% read more about unfolding long header fields here - http://www.faqs.org/rfcs/rfc2822.html
-    {ok, Chunks} = regexp:split(Header, "\r\n[ |\t]"),
+    Chunks = split(Header, "\r\n[ |\t]"),
     UnfoldedHeader = string:join(Chunks, " "),
     
-    {ok, RawHeaders} = regexp:split(UnfoldedHeader, "\r\n"),
+    RawHeaders = split(UnfoldedHeader, "\r\n"),
     %io:format("raw headers = ~n~p~n", [RawHeaders]),
     lists:map(fun parse_header/1, RawHeaders).
 
 parse_header(RawHeader) ->
-    {_, Boundary, _} = regexp:first_match(RawHeader, ":"),
+    {_, [{Boundary, _}]} = re:run(RawHeader, ":"),
     HeaderName = string:strip(string:substr(RawHeader, 1, Boundary - 1)),
     HeaderVal = string:strip(string:substr(RawHeader, Boundary + 1)),
     {header, HeaderName, HeaderVal}.
